@@ -43,6 +43,10 @@ def create_app():
     login_manager.init_app(app)
     migrate.init_app(app, db)
     
+    # Configure Flask-WTF
+    from flask_wtf.csrf import CSRFProtect
+    csrf = CSRFProtect(app)
+    
     # Login manager configuration
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'

@@ -14,6 +14,21 @@
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
+                        {{ form.savings_goal_id.label(class="form-label") }}
+                        {{ form.savings_goal_id(class="form-control") }}
+                        {% if form.savings_goal_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.savings_goal_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Link this savings to an existing goal or create a <a href="{{ url_for('savings.add_goal') }}" target="_blank">new goal</a>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
                         {{ form.purpose.label(class="form-label") }}
                         {{ form.purpose(class="form-control", placeholder="e.g., Emergency Fund, Vacation, New Car") }}
                         {% if form.purpose.errors %}
@@ -23,6 +38,7 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
+                        <div class="form-text">This can match your goal or be more specific</div>
                     </div>
                     
                     <div class="mb-3">
@@ -52,21 +68,7 @@
                         {% endif %}
                     </div>
                     
-                    <div class="mb-3">
-                        {{ form.goal_amount.label(class="form-label") }}
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            {{ form.goal_amount(class="form-control") }}
-                        </div>
-                        <div class="form-text">Set a savings goal for this purpose (optional)</div>
-                        {% if form.goal_amount.errors %}
-                            <div class="text-danger">
-                                {% for error in form.goal_amount.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
+
                     
                     <div class="mb-3">
                         {{ form.notes.label(class="form-label") }}

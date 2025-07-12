@@ -7,9 +7,9 @@ from sqlalchemy import func, and_, desc
 import json
 
 from app import db
-from models import User, Household, Expense,Income, Loan, LoanPayment, ExpenseCategory, Savings, BudgetPlan
+from models import User, Household, Expense,Income, Loan, LoanPayment, ExpenseCategory, Savings, SavingsGoal, BudgetPlan
 from forms import (LoginForm, RegisterForm, JoinHouseholdForm, ExpenseForm, 
-                   IncomeForm, LoanForm, LoanPaymentForm, CategoryForm, SavingsForm, BudgetPlanForm)
+                   IncomeForm, LoanForm, LoanPaymentForm, CategoryForm, SavingsForm, SavingsGoalForm, BudgetPlanForm)
 from utils import get_financial_summary, get_expense_by_category, calculate_loan_payment_split
 
 # Blueprints
@@ -434,10 +434,12 @@ def index():
 def categories():
     household_categories = ExpenseCategory.query.filter_by(household_id=current_user.household_id).all()
     default_categories = ExpenseCategory.query.filter_by(is_default=True).all()
+    form = CategoryForm()
     
     return render_template('settings/categories.html', 
                          household_categories=household_categories,
-                         default_categories=default_categories)
+                         default_categories=default_categories,
+                         form=form)
 
 @settings_bp.route('/categories/add', methods=['POST'])
 @login_required
@@ -499,17 +501,26 @@ def delete_category(category_id):
 def add_savings():
     form = SavingsForm()
     if form.validate_on_submit():
+        savings_goal_id = form.savings_goal_id.data if form.savings_goal_id.data != 0 else None
+        
         savings = Savings(
             household_id=current_user.household_id,
             user_id=current_user.id,
+            savings_goal_id=savings_goal_id,
             purpose=form.purpose.data,
             amount=form.amount.data,
             savings_date=form.savings_date.data,
-            goal_amount=form.goal_amount.data,
             notes=form.notes.data
         )
         db.session.add(savings)
         db.session.commit()
+        
+        # Update savings goal current amount if linked
+        if savings_goal_id:
+            goal = SavingsGoal.query.get(savings_goal_id)
+            if goal:
+                goal.update_current_amount()
+        
         flash('Savings entry added successfully!', 'success')
         return redirect(url_for('savings.list_savings'))
     
@@ -531,25 +542,49 @@ def list_savings():
             .paginate(page=page, per_page=20, error_out=False)
         all_savings = Savings.query.filter_by(household_id=current_user.household_id, user_id=current_user.id).all()
     
-    # Calculate totals by purpose
+    # Get savings goals for progress tracking
+    goals = SavingsGoal.query.filter_by(household_id=current_user.household_id).all()
+    for goal in goals:
+        goal.update_current_amount()  # Update current amounts
+    
+    # Calculate totals by purpose (for backwards compatibility)
     savings_summary = {}
-    all_savings = Savings.query.filter_by(household_id=current_user.household_id).all()
-    for saving in all_savings:
+    view_savings = Savings.query.filter_by(household_id=current_user.household_id).all()
+    for saving in view_savings:
         if saving.purpose not in savings_summary:
             savings_summary[saving.purpose] = {
                 'total_saved': 0.0,
-                'goal_amount': float(saving.goal_amount) if saving.goal_amount else 0.0,
+                'goal_amount': 0.0,
                 'entries': 0
             }
         savings_summary[saving.purpose]['total_saved'] += float(saving.amount)
         savings_summary[saving.purpose]['entries'] += 1
-        if saving.goal_amount:
-            savings_summary[saving.purpose]['goal_amount'] = max(
-                savings_summary[saving.purpose]['goal_amount'],
-                float(saving.goal_amount)
-            )
     
-    return render_template('savings/list.html', savings=savings, savings_summary=savings_summary)
+    return render_template('savings/list.html', savings=savings, savings_summary=savings_summary, goals=goals)
+
+# Savings Goals routes
+@savings_bp.route('/goals')
+@login_required
+def list_goals():
+    goals = SavingsGoal.query.filter_by(household_id=current_user.household_id).all()
+    return render_template('savings/goals.html', goals=goals)
+
+@savings_bp.route('/goals/add', methods=['GET', 'POST'])
+@login_required
+def add_goal():
+    form = SavingsGoalForm()
+    if form.validate_on_submit():
+        goal = SavingsGoal(
+            household_id=current_user.household_id,
+            purpose=form.purpose.data,
+            goal_amount=form.goal_amount.data
+        )
+        db.session.add(goal)
+        db.session.commit()
+        flash('Savings goal created successfully!', 'success')
+        return redirect(url_for('savings.list_goals'))
+    
+    return render_template('savings/add_goal.html', form=form)
 
 @savings_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required

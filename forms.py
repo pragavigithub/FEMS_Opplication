@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, DecimalField, DateField, SelectField, TextAreaField, IntegerField
+from wtforms import StringField, PasswordField, DecimalField, DateField, SelectField, TextAreaField, IntegerField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional
 from wtforms.widgets import TextArea
 from models import ExpenseCategory, Loan
@@ -69,12 +69,26 @@ class LoanPaymentForm(FlaskForm):
 class CategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(min=2, max=100)])
 
+class SavingsGoalForm(FlaskForm):
+    purpose = StringField('Savings Goal Purpose', validators=[DataRequired(), Length(max=100)])
+    goal_amount = DecimalField('Goal Amount', validators=[DataRequired(), NumberRange(min=0.01)], places=2)
+    submit = SubmitField('Create Goal')
+
 class SavingsForm(FlaskForm):
+    savings_goal_id = SelectField('Savings Goal', validators=[Optional()], coerce=int)
     purpose = StringField('Savings Purpose', validators=[DataRequired(), Length(max=100)])
     amount = DecimalField('Amount', validators=[DataRequired(), NumberRange(min=0.01)], places=2)
     savings_date = DateField('Date', validators=[DataRequired()])
-    goal_amount = DecimalField('Goal Amount (Optional)', validators=[Optional(), NumberRange(min=0.01)], places=2)
     notes = TextAreaField('Notes', validators=[Optional(), Length(max=255)])
+    submit = SubmitField('Add Savings')
+    
+    def __init__(self, *args, **kwargs):
+        super(SavingsForm, self).__init__(*args, **kwargs)
+        from models import SavingsGoal
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            goals = SavingsGoal.query.filter_by(household_id=current_user.household_id).all()
+            self.savings_goal_id.choices = [(0, 'No specific goal')] + [(g.id, f"{g.purpose} (${g.current_amount:.2f}/${g.goal_amount:.2f})") for g in goals]
 
 class BudgetPlanForm(FlaskForm):
     category = StringField('Budget Category', validators=[DataRequired(), Length(max=100)])

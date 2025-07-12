@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Create Savings Goal - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-target me-2"></i>Create Savings Goal</h1>
+    <a href="{{ url_for('savings.list_goals') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Goals
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.purpose.label(class="form-label") }}
+                        {{ form.purpose(class="form-control") }}
+                        {% if form.purpose.errors %}
+                            <div class="text-danger">
+                                {% for error in form.purpose.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">e.g., Emergency Fund, Vacation, New Car</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.goal_amount.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.goal_amount(class="form-control") }}
+                        </div>
+                        {% if form.goal_amount.errors %}
+                            <div class="text-danger">
+                                {% for error in form.goal_amount.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('savings.list_goals') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-lightbulb me-2"></i>Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Set realistic goals</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Choose specific purposes</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Track progress regularly</li>
+                    <li class="mb-0"><i class="fas fa-check text-success me-2"></i>Celebrate milestones</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

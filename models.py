@@ -119,17 +119,45 @@ class LoanPayment(db.Model):
     notes = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class SavingsGoal(db.Model):
+    __tablename__ = 'savings_goal'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
+    purpose = db.Column(db.String(100), nullable=False, unique=True)  # e.g., Emergency Fund, Vacation, Car
+    goal_amount = db.Column(db.Numeric(12, 2), nullable=False)
+    current_amount = db.Column(db.Numeric(12, 2), default=0)  # Total saved so far
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship to individual savings entries
+    savings_entries = db.relationship('Savings', backref='savings_goal', lazy=True)
+    
+    def get_progress_percentage(self):
+        """Calculate progress percentage towards goal"""
+        if self.goal_amount <= 0:
+            return 0
+        return min(100, (float(self.current_amount) / float(self.goal_amount)) * 100)
+    
+    def update_current_amount(self):
+        """Recalculate current amount from all savings entries"""
+        total = db.session.query(db.func.sum(Savings.amount)).filter_by(
+            savings_goal_id=self.id
+        ).scalar() or 0
+        self.current_amount = total
+        db.session.commit()
+
 class Savings(db.Model):
     __tablename__ = 'savings'
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    purpose = db.Column(db.String(100), nullable=False)  # e.g., Emergency Fund, Vacation, Car
+    savings_goal_id = db.Column(db.Integer, db.ForeignKey('savings_goal.id'), nullable=True)  # Optional link to goal
+    purpose = db.Column(db.String(100), nullable=False)  # Can match savings goal or be custom
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     currency = db.Column(db.String(3), default='USD')
     savings_date = db.Column(db.Date, nullable=False)
-    goal_amount = db.Column(db.Numeric(12, 2), nullable=True)  # Optional savings goal
     notes = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
