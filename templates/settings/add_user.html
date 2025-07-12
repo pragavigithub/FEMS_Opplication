@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Add User - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-user-plus me-2"></i>Add New User</h1>
+    <a href="{{ url_for('settings.manage_users') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Users
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.display_name.label(class="form-label") }}
+                        {{ form.display_name(class="form-control") }}
+                        {% if form.display_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.display_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control") }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">This email will be used for login</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control") }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Minimum 6 characters</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.is_admin.label(class="form-label") }}
+                        {{ form.is_admin(class="form-select") }}
+                        {% if form.is_admin.errors %}
+                            <div class="text-danger">
+                                {% for error in form.is_admin.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Administrators can manage users and view all household data</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('settings.manage_users') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-shield-alt me-2"></i>User Roles</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-warning"><i class="fas fa-crown me-1"></i>Administrator</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-check text-success me-1"></i>View all household data</li>
+                        <li><i class="fas fa-check text-success me-1"></i>Add/remove users</li>
+                        <li><i class="fas fa-check text-success me-1"></i>Manage categories</li>
+                        <li><i class="fas fa-check text-success me-1"></i>Full system access</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="text-secondary"><i class="fas fa-user me-1"></i>Regular User</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-check text-success me-1"></i>View own financial data</li>
+                        <li><i class="fas fa-check text-success me-1"></i>Add expenses/income</li>
+                        <li><i class="fas fa-check text-success me-1"></i>Basic reporting access</li>
+                        <li><i class="fas fa-times text-danger me-1"></i>Cannot manage users</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

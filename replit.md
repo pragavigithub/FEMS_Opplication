@@ -127,7 +127,13 @@ This is a Flask-based web application designed for multi-user household financia
 ## Changelog
 
 Recent Changes:
-- July 12, 2025: Added category-based savings goals and fixed admin functionality
+- July 12, 2025: Implemented admin-only user creation and comprehensive user management
+  - Restricted user creation to admin users only - removed public join household functionality
+  - Added admin user management panel with add/delete/role toggle capabilities
+  - Created comprehensive user management templates with role indicators
+  - Implemented safety checks preventing admin self-deletion and ensuring at least one admin
+  - Added user management to Settings dropdown with admin crown indicator
+  - Updated login page to remove join household option and direct users to contact admins
   - Created SavingsGoal model for persistent goal tracking with progress indicators
   - Added category-based savings splitting - users can link savings to specific goals
   - Fixed CSRF token issues in Settings/Categories management page
@@ -135,9 +141,7 @@ Recent Changes:
   - Updated Savings form to include goal selection dropdown
   - Added admin role functionality with proper permissions for all financial data
   - Fixed Income model missing user_id field causing edit/delete errors
-  - Added admin status indicator in navigation with crown icon
   - Connected to PostgreSQL database with environment variable support
-  - Fixed all template errors and data type handling issues
 - July 05, 2025: Completed Savings and Budget Planning modules with templates
   - Added Savings tracking with goal progress (reduces available income)
   - Added Budget Planning with planned vs actual tracking (tracking only)

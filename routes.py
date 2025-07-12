@@ -9,7 +9,7 @@ import json
 from app import db
 from models import User, Household, Expense,Income, Loan, LoanPayment, ExpenseCategory, Savings, SavingsGoal, BudgetPlan
 from forms import (LoginForm, RegisterForm, JoinHouseholdForm, ExpenseForm, 
-                   IncomeForm, LoanForm, LoanPaymentForm, CategoryForm, SavingsForm, SavingsGoalForm, BudgetPlanForm)
+                   IncomeForm, LoanForm, LoanPaymentForm, CategoryForm, SavingsForm, SavingsGoalForm, BudgetPlanForm, AddUserForm)
 from utils import get_financial_summary, get_expense_by_category, calculate_loan_payment_split
 
 # Blueprints
@@ -119,37 +119,9 @@ def register():
 
 @auth_bp.route('/join', methods=['GET', 'POST'])
 def join_household():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
-    
-    form = JoinHouseholdForm()
-    if form.validate_on_submit():
-        # Check if household exists
-        household = Household.query.get(form.household_id.data)
-        if not household:
-            flash('Household not found', 'danger')
-            return render_template('auth/register.html', form=form)
-        
-        # Check if user already exists
-        if User.query.filter_by(email=form.email.data).first():
-            flash('Email already registered', 'danger')
-            return render_template('auth/register.html', form=form)
-        
-        # Create user (joining users are not admins by default)
-        user = User(
-            household_id=household.id,
-            display_name=form.display_name.data,
-            email=form.email.data,
-            is_admin=False
-        )
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        
-        flash(f'Successfully joined household: {household.name}!', 'success')
-        return redirect(url_for('auth.login'))
-    
-    return render_template('auth/register.html', form=form, join_mode=True)
+    # Redirect non-authenticated users to login - only admins can create users now
+    flash('Only household administrators can add new users. Please contact your household admin.', 'info')
+    return redirect(url_for('auth.login'))
 
 @auth_bp.route('/logout')
 @login_required
@@ -494,6 +466,101 @@ def delete_category(category_id):
         flash('Category deleted successfully!', 'success')
     
     return redirect(url_for('settings.categories'))
+
+# User Management routes (Admin only)
+@settings_bp.route('/users')
+@login_required
+def manage_users():
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    users = User.query.filter_by(household_id=current_user.household_id).all()
+    return render_template('settings/manage_users.html', users=users)
+
+@settings_bp.route('/users/add', methods=['GET', 'POST'])
+@login_required
+def add_user():
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    form = AddUserForm()
+    if form.validate_on_submit():
+        # Check if user already exists
+        if User.query.filter_by(email=form.email.data).first():
+            flash('Email already registered', 'danger')
+            return render_template('settings/add_user.html', form=form)
+        
+        # Create new user
+        user = User(
+            household_id=current_user.household_id,
+            display_name=form.display_name.data,
+            email=form.email.data,
+            is_admin=(form.is_admin.data == 'True')
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        
+        flash(f'User {form.display_name.data} added successfully!', 'success')
+        return redirect(url_for('settings.manage_users'))
+    
+    return render_template('settings/add_user.html', form=form)
+
+@settings_bp.route('/users/delete/<int:user_id>')
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    user = User.query.filter_by(id=user_id, household_id=current_user.household_id).first_or_404()
+    
+    # Prevent admin from deleting themselves
+    if user.id == current_user.id:
+        flash('You cannot delete your own account.', 'danger')
+        return redirect(url_for('settings.manage_users'))
+    
+    # Check if user has financial data
+    has_data = (
+        user.expenses or 
+        user.incomes or 
+        user.savings or 
+        user.budget_plans
+    )
+    
+    if has_data:
+        flash(f'Cannot delete {user.display_name} - user has financial data associated with their account.', 'danger')
+    else:
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'User {user.display_name} deleted successfully!', 'success')
+    
+    return redirect(url_for('settings.manage_users'))
+
+@settings_bp.route('/users/toggle_admin/<int:user_id>')
+@login_required
+def toggle_admin(user_id):
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    user = User.query.filter_by(id=user_id, household_id=current_user.household_id).first_or_404()
+    
+    # Prevent admin from removing their own admin status if they're the only admin
+    if user.id == current_user.id and user.is_admin:
+        admin_count = User.query.filter_by(household_id=current_user.household_id, is_admin=True).count()
+        if admin_count <= 1:
+            flash('Cannot remove admin status - you are the only administrator.', 'danger')
+            return redirect(url_for('settings.manage_users'))
+    
+    user.is_admin = not user.is_admin
+    db.session.commit()
+    
+    status = 'granted' if user.is_admin else 'removed'
+    flash(f'Admin privileges {status} for {user.display_name}!', 'success')
+    return redirect(url_for('settings.manage_users'))
 
 # Savings routes
 @savings_bp.route('/add', methods=['GET', 'POST'])

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-users me-2"></i>Manage Household Users</h1>
+    <a href="{{ url_for('settings.add_user') }}" class="btn btn-primary">
+        <i class="fas fa-user-plus me-2"></i>Add New User
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if users %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if user.is_admin %}
+                                    <i class="fas fa-crown text-warning me-2" title="Administrator"></i>
+                                {% endif %}
+                                {{ user.display_name }}
+                                {% if user.id == current_user.id %}
+                                    <span class="badge bg-info ms-2">You</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span class="badge bg-warning text-dark">Administrator</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Regular User</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if user.id != current_user.id %}
+                                <a href="{{ url_for('settings.toggle_admin', user_id=user.id) }}" 
+                                   class="btn btn-outline-primary" 
+                                   onclick="return confirm('Toggle admin privileges for {{ user.display_name }}?')">
+                                    {% if user.is_admin %}
+                                        <i class="fas fa-user-minus"></i> Remove Admin
+                                    {% else %}
+                                        <i class="fas fa-user-cog"></i> Make Admin
+                                    {% endif %}
+                                </a>
+                                <a href="{{ url_for('settings.delete_user', user_id=user.id) }}" 
+                                   class="btn btn-outline-danger"
+                                   onclick="return confirm('Are you sure you want to delete {{ user.display_name }}? This action cannot be undone.')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">Current User</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h4>No Users Found</h4>
+            <p class="text-muted mb-4">Start by adding users to your household.</p>
+            <a href="{{ url_for('settings.add_user') }}" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i>Add First User
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Settings
+    </a>
+</div>
+
+<div class="alert alert-info mt-4">
+    <h6><i class="fas fa-info-circle me-2"></i>User Management Guidelines:</h6>
+    <ul class="mb-0">
+        <li>Only administrators can add, remove, or modify users</li>
+        <li>Users with financial data cannot be deleted</li>
+        <li>There must always be at least one administrator</li>
+        <li>New users will receive login credentials to access the household finances</li>
+    </ul>
+</div>
+{% endblock %}

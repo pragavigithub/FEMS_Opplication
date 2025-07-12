@@ -96,3 +96,10 @@ class BudgetPlanForm(FlaskForm):
     actual_amount = DecimalField('Actual Spent', validators=[Optional(), NumberRange(min=0)], places=2)
     budget_month = DateField('Budget Month', validators=[DataRequired()])
     notes = TextAreaField('Notes', validators=[Optional(), Length(max=255)])
+
+class AddUserForm(FlaskForm):
+    display_name = StringField('Display Name', validators=[DataRequired(), Length(min=2, max=100)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=200)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    is_admin = SelectField('Role', choices=[('False', 'Regular User'), ('True', 'Administrator')], default='False')
+    submit = SubmitField('Add User')
