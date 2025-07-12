@@ -102,7 +102,7 @@ class Loan(db.Model):
     
     def get_total_interest_paid(self):
         """Calculate total interest paid so far"""
-        return sum(payment.interest_portion for payment in self.payments)
+        return float(sum(payment.interest_portion for payment in self.payments))
 
 class LoanPayment(db.Model):
     __tablename__ = 'loan_payment'

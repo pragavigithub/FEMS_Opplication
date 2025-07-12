@@ -31,13 +31,9 @@
                                 <div class="mb-2">
                                     <small class="text-muted">Goal: ${{ "%.2f"|format(data.goal_amount) }}</small>
                                     <div class="progress mt-1">
-                                        <div class="progress-bar bg-success"
-     role="progressbar"
-     style="width: {{ [progress, 100] | min }}%">
-</div>
-<!--                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress|min(100) }}%">-->
-<!--                                            {{ "%.1f"|format(progress) }}%-->
-<!--                                        </div>-->
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress if progress <= 100 else 100 }}%">
+                                            {{ "%.1f"|format(progress) }}%
+                                        </div>
                                     </div>
                                 </div>
                                 {% endif %}

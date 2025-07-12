@@ -58,7 +58,7 @@
                 
                 {% if loan_info.remaining_balance > 0 %}
                 <!-- Progress bar -->
-                {% set progress = ((loan_info.loan.principal - loan_info.remaining_balance) / loan_info.loan.principal * 100) %}
+                {% set progress = ((loan_info.loan.principal|float - loan_info.remaining_balance|float) / loan_info.loan.principal|float * 100) %}
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1">
                         <small>Progress</small>
