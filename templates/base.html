@@ -99,6 +99,9 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><span class="dropdown-item-text">{{ current_user.household.name }}</span></li>
+                            {% if current_user.is_admin %}
+                            <li><span class="dropdown-item-text"><small><i class="fas fa-crown me-1 text-warning"></i>Admin</small></span></li>
+                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
                         </ul>

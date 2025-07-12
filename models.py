@@ -29,10 +29,12 @@ class User(UserMixin, db.Model):
     display_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(200), unique=True, nullable=True)
     password_hash = db.Column(db.String(255), nullable=True)
+    is_admin = db.Column(db.Boolean, default=False)  # Admin role for household
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
     expenses = db.relationship('Expense', backref='user', lazy=True)
+    incomes = db.relationship('Income', backref='user', lazy=True)
     savings = db.relationship('Savings', backref='user', lazy=True)
     budget_plans = db.relationship('BudgetPlan', backref='user', lazy=True)
     
@@ -71,6 +73,7 @@ class Income(db.Model):
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     source = db.Column(db.String(100))
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     currency = db.Column(db.String(3), default='USD')

@@ -66,6 +66,7 @@
                         <th>Goal</th>
                         <th>User</th>
                         <th>Notes</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -83,6 +84,20 @@
                         </td>
                         <td>{{ saving.user.display_name }}</td>
                         <td>{{ saving.notes or '-' }}</td>
+                        <td>
+                            {% if current_user.is_admin or saving.user_id == current_user.id %}
+                                <a href="{{ url_for('savings.edit_savings', id=saving.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('savings.delete_savings', id=saving.id) }}"
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Are you sure you want to delete this savings entry?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

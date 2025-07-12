@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Income - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-edit me-2"></i>Edit Income</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.source.label(class="form-label") }}
+                        {{ form.source(class="form-control") }}
+                        {% if form.source.errors %}
+                            <div class="text-danger">
+                                {% for error in form.source.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.amount.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.amount(class="form-control") }}
+                        </div>
+                        {% if form.amount.errors %}
+                            <div class="text-danger">
+                                {% for error in form.amount.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.income_date.label(class="form-label") }}
+                        {{ form.income_date(class="form-control") }}
+                        {% if form.income_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.income_date.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows="3") }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger">
+                                {% for error in form.notes.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Update Income
+                        </button>
+                        <a href="{{ url_for('income.list_income') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

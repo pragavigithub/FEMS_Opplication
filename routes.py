@@ -101,11 +101,12 @@ def register():
         db.session.add(household)
         db.session.flush()  # Get the ID
         
-        # Create user
+        # Create user (first user in household becomes admin)
         user = User(
             household_id=household.id,
             display_name=form.display_name.data,
-            email=form.email.data
+            email=form.email.data,
+            is_admin=True
         )
         user.set_password(form.password.data)
         db.session.add(user)
@@ -134,11 +135,12 @@ def join_household():
             flash('Email already registered', 'danger')
             return render_template('auth/register.html', form=form)
         
-        # Create user
+        # Create user (joining users are not admins by default)
         user = User(
             household_id=household.id,
             display_name=form.display_name.data,
-            email=form.email.data
+            email=form.email.data,
+            is_admin=False
         )
         user.set_password(form.password.data)
         db.session.add(user)
@@ -231,6 +233,7 @@ def add_income():
     if form.validate_on_submit():
         income = Income(
             household_id=current_user.household_id,
+            user_id=current_user.id,
             source=form.source.data,
             amount=form.amount.data,
             income_date=form.income_date.data,
@@ -247,9 +250,15 @@ def add_income():
 @login_required
 def list_income():
     page = request.args.get('page', 1, type=int)
-    incomes = Income.query.filter_by(household_id=current_user.household_id)\
-        .order_by(desc(Income.income_date))\
-        .paginate(page=page, per_page=20, error_out=False)
+    # Show all household income for admins, only own income for regular users
+    if current_user.is_admin:
+        incomes = Income.query.filter_by(household_id=current_user.household_id)\
+            .order_by(desc(Income.income_date))\
+            .paginate(page=page, per_page=20, error_out=False)
+    else:
+        incomes = Income.query.filter_by(household_id=current_user.household_id, user_id=current_user.id)\
+            .order_by(desc(Income.income_date))\
+            .paginate(page=page, per_page=20, error_out=False)
     
     return render_template('income/list.html', incomes=incomes)
 
@@ -260,17 +269,23 @@ from forms import IncomeForm
 @income_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_income(id):
-    #income = Income.query.filter_by(id=id).first_or_404()
-    income = Income.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    # Allow admins to edit any income in household, regular users only their own
+    if current_user.is_admin:
+        income = Income.query.filter_by(id=id, household_id=current_user.household_id).first_or_404()
+    else:
+        income = Income.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    
     form = IncomeForm(obj=income)
-
-    if request.method == 'POST' and form.validate_on_submit():
-        form.populate_obj(income)
+    if form.validate_on_submit():
+        income.source = form.source.data
+        income.amount = form.amount.data
+        income.income_date = form.income_date.data
+        income.notes = form.notes.data
         db.session.commit()
         flash('Income updated successfully!', 'success')
         return redirect(url_for('income.list_income'))
 
-    return render_template('income/form.html', form=form, income=income)
+    return render_template('income/edit.html', form=form, income=income)
 
  # categories = ExpenseCategory.query.filter(
     #     (ExpenseCategory.is_default == True) |
@@ -291,7 +306,12 @@ def edit_income(id):
 @income_bp.route('/delete/<int:id>')
 @login_required
 def delete_income(id):
-    income = Income.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    # Allow admins to delete any income in household, regular users only their own
+    if current_user.is_admin:
+        income = Income.query.filter_by(id=id, household_id=current_user.household_id).first_or_404()
+    else:
+        income = Income.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    
     db.session.delete(income)
     db.session.commit()
     flash('Income deleted successfully!', 'success')
@@ -327,6 +347,7 @@ def add_loan():
 @loan_bp.route('/list')
 @login_required
 def list_loans():
+    # Admins can see all household loans, regular users see all loans too (loans are household-wide)
     loans = Loan.query.filter_by(household_id=current_user.household_id).all()
     loan_data = []
     for loan in loans:
@@ -498,9 +519,17 @@ def add_savings():
 @login_required
 def list_savings():
     page = request.args.get('page', 1, type=int)
-    savings = Savings.query.filter_by(household_id=current_user.household_id)\
-        .order_by(desc(Savings.savings_date))\
-        .paginate(page=page, per_page=20, error_out=False)
+    # Show all household savings for admins, only own savings for regular users
+    if current_user.is_admin:
+        savings = Savings.query.filter_by(household_id=current_user.household_id)\
+            .order_by(desc(Savings.savings_date))\
+            .paginate(page=page, per_page=20, error_out=False)
+        all_savings = Savings.query.filter_by(household_id=current_user.household_id).all()
+    else:
+        savings = Savings.query.filter_by(household_id=current_user.household_id, user_id=current_user.id)\
+            .order_by(desc(Savings.savings_date))\
+            .paginate(page=page, per_page=20, error_out=False)
+        all_savings = Savings.query.filter_by(household_id=current_user.household_id, user_id=current_user.id).all()
     
     # Calculate totals by purpose
     savings_summary = {}
@@ -521,6 +550,42 @@ def list_savings():
             )
     
     return render_template('savings/list.html', savings=savings, savings_summary=savings_summary)
+
+@savings_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_savings(id):
+    # Allow admins to edit any savings in household, regular users only their own
+    if current_user.is_admin:
+        savings = Savings.query.filter_by(id=id, household_id=current_user.household_id).first_or_404()
+    else:
+        savings = Savings.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    
+    form = SavingsForm(obj=savings)
+    if form.validate_on_submit():
+        savings.purpose = form.purpose.data
+        savings.amount = form.amount.data
+        savings.savings_date = form.savings_date.data
+        savings.goal_amount = form.goal_amount.data
+        savings.notes = form.notes.data
+        db.session.commit()
+        flash('Savings updated successfully!', 'success')
+        return redirect(url_for('savings.list_savings'))
+
+    return render_template('savings/edit.html', form=form, savings=savings)
+
+@savings_bp.route('/delete/<int:id>')
+@login_required
+def delete_savings(id):
+    # Allow admins to delete any savings in household, regular users only their own
+    if current_user.is_admin:
+        savings = Savings.query.filter_by(id=id, household_id=current_user.household_id).first_or_404()
+    else:
+        savings = Savings.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    
+    db.session.delete(savings)
+    db.session.commit()
+    flash('Savings deleted successfully!', 'success')
+    return redirect(url_for('savings.list_savings'))
 
 # Budget Plan routes
 @budget_bp.route('/add', methods=['GET', 'POST'])

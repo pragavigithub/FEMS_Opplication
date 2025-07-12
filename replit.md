@@ -127,6 +127,16 @@ This is a Flask-based web application designed for multi-user household financia
 ## Changelog
 
 Recent Changes:
+- July 12, 2025: Fixed Income module and added comprehensive admin functionality
+  - Fixed Income model missing user_id field causing edit/delete errors
+  - Added is_admin role to User model with database migration
+  - Implemented admin permissions for viewing/editing all household data
+  - Added edit/delete functionality for Savings module with proper templates
+  - Updated Income and Savings list views with admin-based access control
+  - Added admin status indicator in navigation with crown icon
+  - Connected to PostgreSQL database with environment variable support
+  - Fixed all template errors in Loan, Savings, and Budget modules
+  - Added proper data type handling for Decimal/float conversions
 - July 05, 2025: Completed Savings and Budget Planning modules with templates
   - Added Savings tracking with goal progress (reduces available income)
   - Added Budget Planning with planned vs actual tracking (tracking only)
