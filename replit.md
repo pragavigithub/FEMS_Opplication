@@ -145,6 +145,7 @@ Recent Changes:
 
 ## Default Login Credentials
 - Email: admin@household.local
+- Username: admin
 - Password: admin123
 - Role: Administrator (can manage all users and data)
 - July 05, 2025: Completed Savings and Budget Planning modules with templates
