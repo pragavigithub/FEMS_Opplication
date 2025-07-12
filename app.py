@@ -6,6 +6,10 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -22,8 +26,12 @@ def create_app():
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
-    # Database configuration
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///finance.db")
+    # Database configuration - prioritize custom database URL if provided
+    custom_db_url = os.environ.get("CUSTOM_DATABASE_URL")
+    if custom_db_url:
+        app.config["SQLALCHEMY_DATABASE_URI"] = custom_db_url
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///finance.db")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
