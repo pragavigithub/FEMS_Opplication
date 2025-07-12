@@ -1,0 +1,73 @@
+-- 1. master user / household
+HOUSEHOLD (
+    HouseholdID      INT PK AUTO,
+    Name             VARCHAR(100) NOT NULL,
+    CreatedAt        TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+USER (
+    UserID           INT PK AUTO,
+    HouseholdID      INT FK -> HOUSEHOLD,
+    DisplayName      VARCHAR(100) NOT NULL,
+    Email            VARCHAR(200) UNIQUE,
+    PasswordHash     VARCHAR(255),
+    CreatedAt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. categories
+EXPENSE_CATEGORY (
+    CategoryID       INT PK AUTO,
+    HouseholdID      INT FK -> HOUSEHOLD,
+    Name             VARCHAR(100) NOT NULL,
+    IsDefault        BOOLEAN DEFAULT FALSE
+);
+
+-- 3. cash‑flow tables
+EXPENSE (
+    ExpenseID        INT PK AUTO,
+    HouseholdID      INT FK,
+    CategoryID       INT FK -> EXPENSE_CATEGORY,
+    UserID           INT FK -> USER,
+    Amount           DECIMAL(12,2) NOT NULL,
+    Currency         CHAR(3) DEFAULT 'USD',
+    ExpenseDate      DATE NOT NULL,
+    Notes            VARCHAR(255),
+    CreatedAt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INCOME (
+    IncomeID         INT PK AUTO,
+    HouseholdID      INT FK,
+    Source           VARCHAR(100),
+    Amount           DECIMAL(12,2) NOT NULL,
+    Currency         CHAR(3) DEFAULT 'USD',
+    IncomeDate       DATE NOT NULL,
+    Notes            VARCHAR(255),
+    CreatedAt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. loan master
+LOAN (
+    LoanID           INT PK AUTO,
+    HouseholdID      INT FK,
+    LenderName       VARCHAR(100),
+    Principal        DECIMAL(14,2) NOT NULL,
+    InterestRate     DECIMAL(5,2)   NOT NULL, -- annual %
+    TermMonths       INT            NOT NULL,
+    StartDate        DATE           NOT NULL,
+    LoanType         VARCHAR(50),             -- e.g. mortgage, personal
+    Notes            VARCHAR(255),
+    CreatedAt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 5. loan payments
+LOAN_PAYMENT (
+    PaymentID        INT PK AUTO,
+    LoanID           INT FK -> LOAN,
+    PaymentDate      DATE NOT NULL,
+    Amount           DECIMAL(12,2) NOT NULL,
+    PrincipalPortion DECIMAL(12,2) NOT NULL,
+    InterestPortion  DECIMAL(12,2) NOT NULL,
+    Notes            VARCHAR(255),
+    CreatedAt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Loan Payments - {{ loan.lender_name or 'Loan' }} - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-credit-card me-2"></i>Loan Payments</h1>
+        <h5 class="text-muted">{{ loan.lender_name or 'Loan #' ~ loan.id }}</h5>
+    </div>
+    <div class="btn-group">
+        <a href="{{ url_for('loan.add_payment') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Payment
+        </a>
+        <a href="{{ url_for('loan.list_loans') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Loans
+        </a>
+    </div>
+</div>
+
+<!-- Loan Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Original Principal</h6>
+                <h4 class="card-text">${{ "%.2f"|format(loan.principal) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Remaining Balance</h6>
+                <h4 class="card-text text-warning">${{ "%.2f"|format(loan.get_remaining_balance()) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Interest Rate</h6>
+                <h4 class="card-text">{{ loan.interest_rate }}%</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Interest Paid</h6>
+                <h4 class="card-text text-info">${{ "%.2f"|format(loan.get_total_interest_paid()) }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-history me-2"></i>Payment History</h5>
+    </div>
+    <div class="card-body">
+        {% if payments %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Payment Amount</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+                        <td><strong>${{ "%.2f"|format(payment.amount) }}</strong></td>
+                        <td><span class="text-success">${{ "%.2f"|format(payment.principal_portion) }}</span></td>
+                        <td><span class="text-danger">${{ "%.2f"|format(payment.interest_portion) }}</span></td>
+                        <td>{{ payment.notes or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-dark">
+                        <th>Totals</th>
+                        <th>${{ "%.2f"|format(payments|sum(attribute='amount')) }}</th>
+                        <th><span class="text-success">${{ "%.2f"|format(payments|sum(attribute='principal_portion')) }}</span></th>
+                        <th><span class="text-danger">${{ "%.2f"|format(payments|sum(attribute='interest_portion')) }}</span></th>
+                        <th>-</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+            <h4>No payments recorded yet</h4>
+            <p class="text-muted">Start recording payments for this loan.</p>
+            <a href="{{ url_for('loan.add_payment') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Record First Payment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3>
+                    <i class="fas fa-user-plus me-2"></i>
+                    {% if join_mode %}Join Household{% else %}Create New Household{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if not join_mode %}
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.household_name.label(class="form-label") }}
+                        {{ form.household_name(class="form-control") }}
+                        {% if form.household_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.household_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.display_name.label(class="form-label") }}
+                        {{ form.display_name(class="form-control") }}
+                        {% if form.display_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.display_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control") }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control") }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Create Household
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.household_id.label(class="form-label") }}
+                        {{ form.household_id(class="form-control") }}
+                        <div class="form-text">Ask your household admin for the Household ID</div>
+                        {% if form.household_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.household_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.display_name.label(class="form-label") }}
+                        {{ form.display_name(class="form-control") }}
+                        {% if form.display_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.display_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control") }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control") }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-users me-2"></i>Join Household
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">
+                    Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
+                </p>
+                {% if not join_mode %}
+                <p class="mb-0">
+                    Want to join an existing household? <a href="{{ url_for('auth.join_household') }}">Join here</a>
+                </p>
+                {% else %}
+                <p class="mb-0">
+                    Want to create a new household? <a href="{{ url_for('auth.register') }}">Create here</a>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

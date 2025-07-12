@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Categories - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tags me-2"></i>Expense Categories</h1>
+    <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Settings
+    </a>
+</div>
+
+<!-- Add New Category -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-plus me-2"></i>Add New Category</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings.add_category') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="input-group">
+                        <input type="text" name="name" class="form-control" placeholder="Category name" required maxlength="100">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Household Categories -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-home me-2"></i>Your Household Categories</h5>
+            </div>
+            <div class="card-body">
+                {% if household_categories %}
+                <div class="list-group">
+                    {% for category in household_categories %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ category.name }}</span>
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('settings.edit_category', category_id=category.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('settings.delete_category', category_id=category.id) }}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Are you sure you want to delete this category?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                    <h5>No custom categories yet</h5>
+                    <p class="text-muted">Add categories specific to your household's needs.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Default Categories -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-star me-2"></i>Default Categories</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">These categories are available to all households and cannot be modified.</p>
+                {% if default_categories %}
+                <div class="list-group">
+                    {% for category in default_categories %}
+                    <div class="list-group-item">
+                        <span>{{ category.name }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Note:</strong> Categories that have expenses assigned to them cannot be deleted. 
+    You can create custom categories for your household while still using the default categories.
+</div>
+{% endblock %}

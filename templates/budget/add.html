@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Add Budget Plan - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-clipboard-list me-2"></i>Add Budget Plan</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.category.label(class="form-label") }}
+                        {{ form.category(class="form-control", placeholder="e.g., Groceries, Entertainment, Utilities") }}
+                        {% if form.category.errors %}
+                            <div class="text-danger">
+                                {% for error in form.category.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.planned_amount.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.planned_amount(class="form-control") }}
+                        </div>
+                        {% if form.planned_amount.errors %}
+                            <div class="text-danger">
+                                {% for error in form.planned_amount.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.actual_amount.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.actual_amount(class="form-control", value="0") }}
+                        </div>
+                        <div class="form-text">Leave as 0 for new budget plans, update later as you spend</div>
+                        {% if form.actual_amount.errors %}
+                            <div class="text-danger">
+                                {% for error in form.actual_amount.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.budget_month.label(class="form-label") }}
+                        {{ form.budget_month(class="form-control") }}
+                        <div class="form-text">Select the first day of the month this budget applies to</div>
+                        {% if form.budget_month.errors %}
+                            <div class="text-danger">
+                                {% for error in form.budget_month.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows="3") }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger">
+                                {% for error in form.notes.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Add Budget Plan
+                        </button>
+                        <a href="{{ url_for('budget.list_budget') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set first day of current month as default
+document.addEventListener('DOMContentLoaded', function() {
+    const dateField = document.getElementById('budget_month');
+    if (!dateField.value) {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        dateField.value = firstDay.toISOString().split('T')[0];
+    }
+});
+</script>
+{% endblock %}

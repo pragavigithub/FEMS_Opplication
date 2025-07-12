@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Budget Plans - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-clipboard-list me-2"></i>Budget Plans</h1>
+    <div class="btn-group">
+        <a href="{{ url_for('budget.add_budget') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Budget Plan
+        </a>
+    </div>
+</div>
+
+<!-- Month Navigation -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5>Budget for {{ current_month }}</h5>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="btn-group" role="group">
+                    <a href="#" onclick="navigateMonth(-1)" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </a>
+                    <a href="#" onclick="navigateMonth(1)" class="btn btn-outline-primary">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Summary -->
+{% if monthly_summary.categories > 0 %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Planned</h6>
+                <h3 class="card-text text-primary">${{ "%.2f"|format(monthly_summary.total_planned) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Spent</h6>
+                <h3 class="card-text text-warning">${{ "%.2f"|format(monthly_summary.total_actual) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Remaining</h6>
+                {% set remaining = monthly_summary.total_planned - monthly_summary.total_actual %}
+                <h3 class="card-text {% if remaining >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    ${{ "%.2f"|format(remaining) }}
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Budget Plans List -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-list me-2"></i>Budget Categories</h5>
+    </div>
+    <div class="card-body">
+        {% if budgets.items %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Planned</th>
+                        <th>Actual</th>
+                        <th>Remaining</th>
+                        <th>Progress</th>
+                        <th>User</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for budget in budgets.items %}
+                    {% set remaining = budget.get_remaining_budget() %}
+                    {% set progress = budget.get_usage_percentage() %}
+                    <tr>
+                        <td><strong>{{ budget.category }}</strong></td>
+                        <td>${{ "%.2f"|format(budget.planned_amount) }}</td>
+                        <td>${{ "%.2f"|format(budget.actual_amount) }}</td>
+                        <td class="{% if remaining >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ${{ "%.2f"|format(remaining) }}
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar {% if progress <= 100 %}bg-success{% else %}bg-danger{% endif %}" 
+                                     role="progressbar" style="width: {{ progress|min(100) }}%">
+                                    {{ "%.1f"|format(progress) }}%
+                                </div>
+                            </div>
+                            {% if progress > 100 %}
+                                <small class="text-danger">Over budget by {{ "%.1f"|format(progress - 100) }}%</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ budget.user.display_name }}</td>
+                        <td>
+                            <a href="{{ url_for('budget.edit_budget', budget_id=budget.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if budgets.pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if budgets.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('budget.list_budget', page=budgets.prev_num, month=current_month) }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in budgets.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != budgets.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('budget.list_budget', page=page_num, month=current_month) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if budgets.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('budget.list_budget', page=budgets.next_num, month=current_month) }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+            <h4>No budget plans for this month</h4>
+            <p class="text-muted">Create budget plans to track your spending against planned amounts.</p>
+            <a href="{{ url_for('budget.add_budget') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create Your First Budget Plan
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Budget Planning:</strong> These are planning records only - they don't affect your income calculations. 
+    Use them to set spending targets and track your progress against planned amounts.
+</div>
+
+<script>
+function navigateMonth(direction) {
+    const currentDate = new Date('{{ current_month }}-01');
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1);
+    const newMonth = newDate.toISOString().slice(0, 7);
+    window.location.href = "{{ url_for('budget.list_budget') }}?month=" + newMonth;
+}
+</script>
+{% endblock %}

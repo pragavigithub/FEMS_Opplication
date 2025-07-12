@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-cog me-2"></i>Settings</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tags me-2"></i>Expense Categories</h5>
+            </div>
+            <div class="card-body">
+                <p>Manage your household's expense categories. You can add custom categories specific to your household needs.</p>
+                <a href="{{ url_for('settings.categories') }}" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Manage Categories
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-home me-2"></i>Household Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Household:</strong> {{ current_user.household.name }}</p>
+                <p><strong>Household ID:</strong> {{ current_user.household.id }}</p>
+                <p class="text-muted">Share this ID with family members who want to join your household.</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Adding Family Members:</strong> Other family members can join this household by using the "Join Household" option during registration and entering the Household ID above.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user me-2"></i>Your Profile</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Display Name:</strong> {{ current_user.display_name }}</p>
+                <p><strong>Email:</strong> {{ current_user.email }}</p>
+                <p><strong>Member Since:</strong> {{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('report.index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line me-2"></i>View Financial Reports
+                    </a>
+                    <a href="{{ url_for('expense.list_expenses') }}" class="btn btn-outline-danger">
+                        <i class="fas fa-list me-2"></i>View All Expenses
+                    </a>
+                    <a href="{{ url_for('income.list_income') }}" class="btn btn-outline-success">
+                        <i class="fas fa-list me-2"></i>View All Income
+                    </a>
+                    <a href="{{ url_for('loan.list_loans') }}" class="btn btn-outline-info">
+                        <i class="fas fa-university me-2"></i>View All Loans
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

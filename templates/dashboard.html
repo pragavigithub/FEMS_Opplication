@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Household Finance Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chart-line me-2"></i>Financial Dashboard</h1>
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('expense.add_expense') }}" class="btn btn-outline-danger">
+            <i class="fas fa-minus-circle me-1"></i>Add Expense
+        </a>
+        <a href="{{ url_for('income.add_income') }}" class="btn btn-outline-success">
+            <i class="fas fa-plus-circle me-1"></i>Add Income
+        </a>
+    </div>
+</div>
+
+<!-- Financial Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Today</h6>
+                <h3 class="card-text text-info">${{ "%.2f"|format(summaries.today.net) }}</h3>
+                <small class="text-muted">
+                    Income: ${{ "%.2f"|format(summaries.today.income) }} | 
+                    Expenses: ${{ "%.2f"|format(summaries.today.expenses) }} | 
+                    Savings: ${{ "%.2f"|format(summaries.today.savings) }}
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">This Week</h6>
+                <h3 class="card-text text-info">${{ "%.2f"|format(summaries.week.net) }}</h3>
+                <small class="text-muted">
+                    Income: ${{ "%.2f"|format(summaries.week.income) }} | 
+                    Expenses: ${{ "%.2f"|format(summaries.week.expenses) }} | 
+                    Savings: ${{ "%.2f"|format(summaries.week.savings) }}
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">This Month</h6>
+                <h3 class="card-text text-info">${{ "%.2f"|format(summaries.month.net) }}</h3>
+                <small class="text-muted">
+                    Income: ${{ "%.2f"|format(summaries.month.income) }} | 
+                    Expenses: ${{ "%.2f"|format(summaries.month.expenses) }} | 
+                    Savings: ${{ "%.2f"|format(summaries.month.savings) }}
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">This Year</h6>
+                <h3 class="card-text text-info">${{ "%.2f"|format(summaries.year.net) }}</h3>
+                <small class="text-muted">
+                    Income: ${{ "%.2f"|format(summaries.year.income) }} | 
+                    Expenses: ${{ "%.2f"|format(summaries.year.expenses) }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Expense Categories Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie me-2"></i>Monthly Expenses by Category</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="expenseChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history me-2"></i>Recent Transactions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Recent Expenses</h6>
+                        {% if recent_expenses %}
+                            {% for expense in recent_expenses %}
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <div>
+                                    <strong>{{ expense.category.name }}</strong><br>
+                                    <small class="text-muted">{{ expense.expense_date.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                <span class="text-danger">-${{ "%.2f"|format(expense.amount) }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No recent expenses</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Recent Income</h6>
+                        {% if recent_income %}
+                            {% for income in recent_income %}
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <div>
+                                    <strong>{{ income.source }}</strong><br>
+                                    <small class="text-muted">{{ income.income_date.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                <span class="text-success">+${{ "%.2f"|format(income.amount) }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No recent income</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loan Summary -->
+{% if loan_summary %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-university me-2"></i>Active Loans</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for loan_info in loan_summary %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ loan_info.loan.lender_name or 'Loan' }}</h6>
+                                <p class="card-text">
+                                    <strong>Remaining:</strong> ${{ "%.2f"|format(loan_info.remaining_balance) }}<br>
+                                    <strong>Interest Paid:</strong> ${{ "%.2f"|format(loan_info.total_interest_paid) }}<br>
+                                    <strong>Rate:</strong> {{ loan_info.loan.interest_rate }}%
+                                </p>
+                                <a href="{{ url_for('loan.loan_payments', loan_id=loan_info.loan.id) }}" class="btn btn-sm btn-outline-primary">
+                                    View Payments
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+// Initialize expense pie chart
+const expenseData = {{ expense_by_category|tojson }};
+if (Object.keys(expenseData).length > 0) {
+    createExpenseChart(expenseData);
+} else {
+    document.getElementById('expenseChart').style.display = 'none';
+    document.querySelector('#expenseChart').parentElement.innerHTML = '<p class="text-muted text-center">No expenses this month</p>';
+}
+</script>
+{% endblock %}

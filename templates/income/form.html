@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if income %}Edit Income{% else %}Add Income{% endif %} - Household Finance Manager
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2>{% if income %}Edit Income{% else %}Add Income{% endif %}</h2>
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.source.label }} {{ form.source(class="form-control") }}
+                {% if form.source.errors %}
+                    <div class="text-danger">{{ form.source.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.amount.label }} {{ form.amount(class="form-control") }}
+                {% if form.amount.errors %}
+                    <div class="text-danger">{{ form.amount.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.date.label }} {{ form.date(class="form-control") }}
+                {% if form.date.errors %}
+                    <div class="text-danger">{{ form.date.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.description.label }} {{ form.description(class="form-control") }}
+                {% if form.description.errors %}
+                    <div class="text-danger">{{ form.description.errors[0] }}</div>
+                {% endif %}
+            </div>
+            {{ form.submit(class="btn btn-success") }}
+        </form>
+    </div>
+</div>
+{% endblock %}
