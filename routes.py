@@ -86,36 +86,9 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
-    
-    form = RegisterForm()
-    if form.validate_on_submit():
-        # Check if user already exists
-        if User.query.filter_by(email=form.email.data).first():
-            flash('Email already registered', 'danger')
-            return render_template('auth/register.html', form=form)
-        
-        # Create household
-        household = Household(name=form.household_name.data)
-        db.session.add(household)
-        db.session.flush()  # Get the ID
-        
-        # Create user (first user in household becomes admin)
-        user = User(
-            household_id=household.id,
-            display_name=form.display_name.data,
-            email=form.email.data,
-            is_admin=True
-        )
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        
-        flash('Registration successful!', 'success')
-        return redirect(url_for('auth.login'))
-    
-    return render_template('auth/register.html', form=form)
+    # Redirect to login - registration is now admin-only through user management
+    flash('Account creation is restricted to administrators. Please contact your household admin.', 'info')
+    return redirect(url_for('auth.login'))
 
 @auth_bp.route('/join', methods=['GET', 'POST'])
 def join_household():
@@ -168,7 +141,12 @@ from forms import ExpenseForm
 @expense_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_expense(id):
-    expense = Expense.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    # Allow admins to edit any expense in household, regular users only their own
+    if current_user.is_admin:
+        expense = Expense.query.filter_by(id=id, household_id=current_user.household_id).first_or_404()
+    else:
+        expense = Expense.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    
     form = ExpenseForm(obj=expense)
 
     if request.method == 'POST' and form.validate_on_submit():
@@ -179,9 +157,7 @@ def edit_expense(id):
 
     categories = ExpenseCategory.query.filter(
         (ExpenseCategory.is_default == True) |
-        (ExpenseCategory.household_id.in_(
-            db.session.query(Household.id).filter_by(id=current_user.id)
-        ))
+        (ExpenseCategory.household_id == current_user.household_id)
     ).all()
 
     return render_template('expenses/add.html', form=form, expense=expense, categories=categories)
@@ -191,7 +167,12 @@ def edit_expense(id):
 @expense_bp.route('/delete/<int:id>')
 @login_required
 def delete_expense(id):
-    expense = Expense.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    # Allow admins to delete any expense in household, regular users only their own
+    if current_user.is_admin:
+        expense = Expense.query.filter_by(id=id, household_id=current_user.household_id).first_or_404()
+    else:
+        expense = Expense.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    
     db.session.delete(expense)
     db.session.commit()
     flash('Expense deleted successfully!', 'success')
