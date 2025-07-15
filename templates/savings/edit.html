@@ -53,15 +53,12 @@
                     </div>
                     
                     <div class="mb-3">
-                        {{ form.goal_amount.label(class="form-label") }}
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            {{ form.goal_amount(class="form-control") }}
-                        </div>
-                        <div class="form-text">Optional - leave blank if no specific goal</div>
-                        {% if form.goal_amount.errors %}
+                        {{ form.savings_goal_id.label(class="form-label") }}
+                        {{ form.savings_goal_id(class="form-control") }}
+                        <div class="form-text">Optional - select a specific savings goal</div>
+                        {% if form.savings_goal_id.errors %}
                             <div class="text-danger">
-                                {% for error in form.goal_amount.errors %}
+                                {% for error in form.savings_goal_id.errors %}
                                     <small>{{ error }}</small>
                                 {% endfor %}
                             </div>

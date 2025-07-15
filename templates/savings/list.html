@@ -76,8 +76,8 @@
                         <td><strong>{{ saving.purpose }}</strong></td>
                         <td><span class="text-success">+${{ "%.2f"|format(saving.amount) }}</span></td>
                         <td>
-                            {% if saving.goal_amount %}
-                                ${{ "%.2f"|format(saving.goal_amount) }}
+                            {% if saving.savings_goal %}
+                                {{ saving.savings_goal.purpose }}
                             {% else %}
                                 <span class="text-muted">No goal</span>
                             {% endif %}

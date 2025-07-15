@@ -644,13 +644,40 @@ def edit_savings(id):
         savings = Savings.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     
     form = SavingsForm(obj=savings)
+    
+    # Set the savings_goal_id field value for the form
+    if savings.savings_goal_id:
+        form.savings_goal_id.data = savings.savings_goal_id
+    else:
+        form.savings_goal_id.data = 0
+    
     if form.validate_on_submit():
+        # Get the old savings goal for potential updates
+        old_goal_id = savings.savings_goal_id
+        
+        # Update savings fields
         savings.purpose = form.purpose.data
         savings.amount = form.amount.data
         savings.savings_date = form.savings_date.data
-        savings.goal_amount = form.goal_amount.data
         savings.notes = form.notes.data
+        
+        # Handle savings goal relationship
+        savings_goal_id = form.savings_goal_id.data if form.savings_goal_id.data != 0 else None
+        savings.savings_goal_id = savings_goal_id
+        
         db.session.commit()
+        
+        # Update savings goal current amounts if they changed
+        if old_goal_id:
+            old_goal = SavingsGoal.query.get(old_goal_id)
+            if old_goal:
+                old_goal.update_current_amount()
+        
+        if savings_goal_id and savings_goal_id != old_goal_id:
+            new_goal = SavingsGoal.query.get(savings_goal_id)
+            if new_goal:
+                new_goal.update_current_amount()
+        
         flash('Savings updated successfully!', 'success')
         return redirect(url_for('savings.list_savings'))
 
@@ -665,8 +692,18 @@ def delete_savings(id):
     else:
         savings = Savings.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     
+    # Update savings goal if this entry was linked to one
+    savings_goal_id = savings.savings_goal_id
+    
     db.session.delete(savings)
     db.session.commit()
+    
+    # Update the savings goal's current amount after deletion
+    if savings_goal_id:
+        goal = SavingsGoal.query.get(savings_goal_id)
+        if goal:
+            goal.update_current_amount()
+    
     flash('Savings deleted successfully!', 'success')
     return redirect(url_for('savings.list_savings'))
 
